@@ -6,12 +6,7 @@ pipeline {
   }
   stages {
     stage('Test') {
-      agent {
-        kubernetes {
-          label 'nodejs-app-pod-2'
-          yamlFile 'nodejs-pod.yaml'
-        }
-      }
+      agent { label 'nodejs-app' }
       steps {
         checkout scm
         container('nodejs') {
@@ -23,10 +18,27 @@ pipeline {
     stage('Build and Push Image') {
       when {
         beforeAgent true
+        beforeInput true
         branch 'master'
       }
       steps {
         echo "TODO - build and push image"
+      }
+    }
+    stage('Deploy') {
+      when {
+        beforeAgent true
+        branch 'master'
+      }
+      options {
+        timeout(time: 60, unit: 'SECONDS') 
+      }
+      input {
+        message "Should we deploy?"
+        submitterParameter "APPROVER"
+      }
+      steps {
+        echo "Continuing with deployment - approved by ${APPROVER}"
       }
     }
   }
